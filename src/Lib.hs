@@ -10,6 +10,7 @@ import Control.Monad.Reader
 import Servant
 
 newtype Greet = Greet String deriving (Show)
+type Handler' a = ReaderT Greet Handler a
 
 type API = "a" :> Get '[JSON] String
   :<|> "b" :> Get '[JSON] Int
@@ -21,19 +22,20 @@ app :: Greet -> Application
 app g = serve api enteredServer
   where enteredServer :: Server API
         enteredServer = enter r2h server
-        r2h = Nat $ \r -> return (runReader r g)
+        r2h = runReaderTNat g
 
 api :: Proxy API
 api = Proxy
 
-server :: ServerT API (Reader Greet)
-server = aHandler
-  :<|> pure bHandler
+server :: Handler' String :<|> Handler' Int
+server = aHandler'
+  :<|> bHandler'
 
-aHandler :: Reader Greet String
-aHandler = do
+aHandler' :: Handler' String
+aHandler' = do
+  liftIO $ putStrLn "debug"
   (Greet greet) <- ask
-  return $ greet ++ "a"
+  return greet
 
-bHandler :: Int
-bHandler = 1
+bHandler' :: Handler' Int
+bHandler' = return 1
