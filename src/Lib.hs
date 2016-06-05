@@ -6,6 +6,7 @@ module Lib
 
 import           Control.Monad.Reader
 import           Data.Maybe               (fromMaybe)
+import Data.Text
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
@@ -18,7 +19,10 @@ type API = "a" :> Get '[JSON] String
   :<|> "c" :> Header "Accept" String :> Get '[PlainText] (Headers '[Header "X-Foo" String] String)
 
 startApp :: IO ()
-startApp = run 8080 (app (Greet "Hello"))
+startApp = do
+  putStrLn "Starting server on 8080 with the following layout:"
+  putStrLn.unpack $ layout api
+  run 8080 (app (Greet "Hello"))
 
 app :: Greet -> Application
 app g = serve api enteredServer
